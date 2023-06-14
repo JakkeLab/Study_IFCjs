@@ -95458,19 +95458,26 @@ const hightlightMaterial = new MeshLambertMaterial( {
     depthTest: false
 });
 
+const selectionMaterial = new MeshLambertMaterial( {
+    transparent : true,
+    opacity : 0.9,
+    color: 0xff22ff,
+    depthTest: false
+});
+
 let lastModel;
 
 
 
-function pick(event) {
+function pick(event, material, message)  {
     const found = cast(event);
 
-    if(found){
+    if(found) {
         const index = found.faceIndex;
         lastModel = found.object;
         const geometry = found.object.geometry;
         const id = loader.ifcManager.getExpressId(geometry, index);
-        console.log(id);
+        console.log(message + " : "+ id);
     
         loader.ifcManager.createSubset({
             modelID : found.object.modelID,
@@ -95480,9 +95487,10 @@ function pick(event) {
             removePrevious: true
         });
     } else if (lastModel) {
-        loader.ifcManager.removeSubset(lastModel.modelID, hightlightMaterial);
+        loader.ifcManager.removeSubset(lastModel.modelID, material);
         lastModel = undefined;
     }
 }
 
-canvas.onmousemove = (event) => pick(event);
+canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse");
+canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick");

@@ -13,3 +13,6 @@ async function load() {
     await viewer.shadowDropper.renderShadow(model.modelID);
     viewer.context.renderer.postProduction.active = true;
 }
+
+window.ondblclick = () => viewer.IFC.selector.pickIfcItem();
+window.onmousemove =() => viewer.IFC.selector.prePickIfcItem();
