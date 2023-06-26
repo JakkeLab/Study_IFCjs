@@ -2,7 +2,7 @@
   "name": "02_helloworldwiv",
   "version": "1.0.0",
   "description": "",
-  "type" : "module",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "build": "rollup -c",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "three": "^0.135.0",
+    "web-ifc": "^0.0.41",
     "web-ifc-viewer": "^1.0.216"
   }
 }

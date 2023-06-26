@@ -8,6 +8,12 @@ html, body {
     overflow: hidden;
 }
 
+.checkboxes {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+}
+
 #viewer-container {
     position: fixed;
     top: 0;
@@ -16,3 +22,58 @@ html, body {
     width: 100%;
     height: 100%;
 }
+
+#ifc-tree-menu {
+    position: absolute;
+    overflow-y: scroll;
+    background-color: white;
+    height: 100vh;
+    padding: 1rem;
+}
+
+li, ul {
+    user-select: none;
+    cursor: pointer;
+}
+
+/* Remove default bullets */
+ul, #myUL {
+    list-style-type: none;
+  }
+  
+  /* Remove margins and padding from the parent ul */
+  #myUL {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Style the caret/arrow */
+  .caret {
+    cursor: pointer;
+    user-select: none; /* Prevent text selection */
+  }
+  
+  /* Create the caret/arrow with a unicode, and style it */
+  .caret::before {
+    content: "\25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  
+  /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+  .caret-down::before {
+    transform: rotate(90deg);
+  }
+  
+  /* Hide the nested list */
+  .nested {
+    display: none;
+    margin-left: 1.5rem;
+    margin-right : 1.5rem;
+  }
+  
+  /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+  .active {
+    display: block;
+  }

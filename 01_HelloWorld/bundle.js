@@ -95469,7 +95469,7 @@ let lastModel;
 
 
 
-function pick(event, material, message)  {
+async function pick(event, material, message, getProps)  {
     const found = cast(event);
 
     if(found) {
@@ -95477,8 +95477,34 @@ function pick(event, material, message)  {
         lastModel = found.object;
         const geometry = found.object.geometry;
         const id = loader.ifcManager.getExpressId(geometry, index);
-        console.log(message + " : "+ id);
-    
+
+        //web-ifc properties example
+        if(getProps) {
+        //     const props = await loader.ifcManager.getItemProperties(found.object.modelID, id);
+        //     console.log(props);
+        //     const psets = await loader.ifcManager.getPropertySets(found.object.modelID, id);
+            
+
+            
+        //     for(const pset of psets) {
+        //         const realValues = [];
+
+        //         for(const prop of pset.HasProperties) {
+        //             const id = prop.value;
+        //             const value = await loader.ifcManager.getItemProperties(found.object.modelID, id);
+        //             realValues.push(value);
+        //         }
+
+        //         psets.HasProperties = realValues;
+        //     }
+        //     console.log(psets);
+            const buildings = await loader.ifcManager.getAllItemsOfType(found.object.modelID, IFCBUILDING, true);
+            const building = buildings[0];
+            console.log(building);
+        }
+        
+        
+
         loader.ifcManager.createSubset({
             modelID : found.object.modelID,
             ids: [id],
@@ -95492,5 +95518,5 @@ function pick(event, material, message)  {
     }
 }
 
-canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse");
-canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick");
+canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse", false);
+canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick", true);

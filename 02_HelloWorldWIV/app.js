@@ -1,18 +1,150 @@
 import { Color } from "three";
 import { IfcViewerAPI } from "web-ifc-viewer";
+import {
+    IFCWALLSTANDARDCASE,
+    IFCSLAB,
+    IFCFURNISHINGELEMENT,
+    IFCDOOR,
+    IFCWINDOW,
+    IFCPLATE,
+    IFCMEMBER
+} from 'web-ifc';
 
 const container = document.getElementById('viewer-container');
 const viewer = new IfcViewerAPI({container, backgroundColor : new Color(0xffffff)});
 viewer.axes.setAxes();
 viewer.grid.setGrid();
 
-load();
+const scene = viewer.context.getScene();
 
-async function load() {
-    const model = await viewer.IFC.loadIfcUrl('./01.ifc');
+loadIfc("./01.ifc");
+let model;
+
+async function loadIfc(url) {
+    model = await viewer.IFC.loadIfcUrl(url);
     await viewer.shadowDropper.renderShadow(model.modelID);
     viewer.context.renderer.postProduction.active = true;
+
+    // const project = await viewer.IFC.getSpatialStructure(model.modelID);
+    // console.log(project);
+    // createTreeMenu(project);
 }
 
-window.ondblclick = () => viewer.IFC.selector.pickIfcItem();
-window.onmousemove =() => viewer.IFC.selector.prePickIfcItem();
+const categories = {
+    IFCWALLSTANDARDCASE,
+    IFCSLAB,
+    IFCFURNISHINGELEMENT,
+    IFCDOOR,
+    IFCWINDOW,
+    IFCPLATE,
+    IFCMEMBER
+}
+
+function getName(category) {
+    const names = Object.keys(categories);
+    return names.find(name => categories[name] ===category);
+}
+
+async function getAll(category) {
+    return viewer.IFC.loader.ifcManager.getAllItemsOfType(model.modelID, category);
+}
+
+async function newSubsetofType(category) {
+    const ids = await getAll(categories)
+    return viewer.IFC.loader.ifcManager.createSubset({
+        modelID : model.modelID,
+        scene,
+        ids,
+        removePrevious: true,
+        customID : category.toString()
+    })
+}
+
+// // Spatial tree
+
+// function createTreeMenu(ifcProject) {
+//     const root = document.getElementById("tree-root");
+//     removeAllChildren(root);
+//     const ifcProjectNode = createNestedChild(root, ifcProject);
+//     for(const child of ifcProject.children) {
+//         constructTreeMenuNode(ifcProjectNode, child);
+//     }
+
+// }
+
+// function constructTreeMenuNode(parent, node) {
+//     const children = node.children;
+//     if(children.length === 0) {
+//         createSimpleChild(parent, node);
+//         return;
+//     }
+//     const nodeElement = createNestedChild(parent, node);
+//     for(const child of children) {
+//         constructTreeMenuNode(nodeElement, child);
+//     }
+// }
+
+// function createSimpleChild(parent, node) {
+//     const content = nodeToString(node)
+//     const childNode = document.createElement('li');
+//     childNode.classList.add('leaf-node');
+//     childNode.textContent = content;
+//     parent.appendChild(childNode);
+
+//     childNode.onmouseenter = () => {
+//         viewer.IFC.selector.prepickIfcItemsByID(model.modelID, [node.expressID]);
+//     }
+// }
+
+// function createNestedChild(parent, node) {
+//     const content = nodeToString(node);
+//     const root = document.createElement('li');
+//     createTitle(root, content);
+//     const childrenContainer = document.createElement('ul');
+//     childrenContainer.classList.add('nested');
+//     root.appendChild(childrenContainer);
+//     parent.appendChild(root);
+//     return childrenContainer;
+// }
+
+// function createTitle(parent, content) {
+//     const title = document.createElement('span');
+//     title.classList.add('caret');
+//     title.onclick = () => {
+//         title.parentElement.querySelector('.nested').classList.toggle('active');
+//         title.classList.toggle('caret-down');
+//     }
+
+//     title.textContent = content;
+//     parent.appendChild(title);
+// }
+
+// function nodeToString(node) {
+//     return `${node.type} - ${node.expressID}`;
+// }
+
+// function removeAllChildren(element) {
+//     while(element.firstChild) {
+//         element.removeChild(element.firstChild);
+//     }  
+// }
+
+// //Tree from w3school
+// const toggler = document.getElementsByClassName("caret");
+// let i;
+
+// for (i = 0; i < toggler.length; i++) {
+//   toggler[i].addEventListener("click", function() {
+//     this.parentElement.querySelector(".nested").classList.toggle("active");
+//     this.classList.toggle("caret-down");
+//   });
+// }
+
+// // //Hightlight Object
+// // window.onmousemove = () => viewer.IFC.selector.prePickIfcItem();
+
+// // window.ondblclick = async () => {
+// //     const found = await viewer.IFC.selector.pickIfcItem();
+// //     const result = await viewer.IFC.loader.ifcManager.getItemProperties(found.modelID, found.id);
+// //     console.log(result);
+// // }
