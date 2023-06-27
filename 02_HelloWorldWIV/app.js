@@ -16,19 +16,46 @@ viewer.axes.setAxes();
 viewer.grid.setGrid();
 
 const scene = viewer.context.getScene();
+const pickable = viewer.context.items.pickableIfcModels;
 
 loadIfc("./01.ifc");
 let model;
 
 async function loadIfc(url) {
     model = await viewer.IFC.loadIfcUrl(url);
+    model.removeFromParent();
+    togglePickable(model, false);
+    
     await viewer.shadowDropper.renderShadow(model.modelID);
     viewer.context.renderer.postProduction.active = true;
+    await setupAllCategories();
 
     // const project = await viewer.IFC.getSpatialStructure(model.modelID);
     // console.log(project);
     // createTreeMenu(project);
 }
+
+window.onmousemove = () => {
+    viewer.IFC.selector.prePickIfcItem();
+}
+
+window.ondblclick = () => {
+    const result = viewer.context.castRayIfc();
+    console.log(result);
+    if(result === null) return;
+    
+    const index = result.faceIndex;
+    const subset = result.object;
+    const id = viewer.IFC.loader.ifcManager.getExpressId(model.geometry, index);
+    viewer.IFC.loader.ifcManager.removeFromSubset(
+        subset.modelID,
+        [id],
+        subset.userData.cagetegory
+    );
+
+    updatePostproduction();
+}
+
 
 const categories = {
     IFCWALLSTANDARDCASE,
@@ -40,24 +67,78 @@ const categories = {
     IFCMEMBER
 }
 
+//Get the name of each categories
 function getName(category) {
     const names = Object.keys(categories);
-    return names.find(name => categories[name] ===category);
+    return names.find(name => categories[name] === category);
 }
 
+// Gets the IDs of all the items of a specific category
 async function getAll(category) {
     return viewer.IFC.loader.ifcManager.getAllItemsOfType(model.modelID, category);
 }
 
-async function newSubsetofType(category) {
-    const ids = await getAll(categories)
+const subsets = {};
+
+async function setupAllCategories() {
+    const allCategories = Object.values(categories);
+    for(const cagetegory of allCategories) {
+        setupCategory(cagetegory);
+    }
+}
+
+async function setupCategory(category) {
+    const subset = await newSubsetOfType(category);
+    subset.userData.cagetegory = category.toString();
+    subsets[category] = subset;
+    togglePickable(subset, false);
+    setupCheckbox(category);
+}
+
+function setupCheckbox(category) {
+    const name = getName(category);
+    const checkbox = document.getElementById(name);
+    checkbox.addEventListener('change', () => {
+        const subset = subsets[category]
+        if(checkbox.checked) {
+            scene.add(subset);
+            togglePickable(subset, true);
+        }
+        else  {
+            subset.removeFromParent();
+            togglePickable(subset, false);
+        }
+
+        updatePostproduction();
+
+    });
+}
+
+function updatePostproduction() {
+    viewer.context.renderer.postProduction.update();
+}
+
+// Creates a new subset containing all elements of a category
+async function newSubsetOfType(category) {
+    const ids = await getAll(category);
     return viewer.IFC.loader.ifcManager.createSubset({
-        modelID : model.modelID,
+        modelID: 0,
         scene,
         ids,
         removePrevious: true,
-        customID : category.toString()
-    })
+        customID: category.toString()
+    });
+}
+
+function togglePickable(mesh, isPickable) {
+    const pickableModels = viewer.context.items.pickableIfcModels;
+
+    if(isPickable) {
+        pickableModels.push(mesh);
+    } else {
+        const index = pickable.indexOf(mesh);
+        pickableModels.splice(index, 1);
+    }
 }
 
 // // Spatial tree
