@@ -69,13 +69,12 @@ renderer.setSize(size.width, size.height);
 // IFC loading
 const loader = new IFCLoader();
 
-
+// loader.ifcManager.setupThreeMeshBVH(computeBoundsTree, disposeBoundsTree, acceleratedRaycast);
+loader.ifcManager.setWasmPath("wasm/");
+loader.ifcManager.useWebWorkers(true, './IFCWorker.js');
 
 const input = document.getElementById('file-input');
 input.addEventListener('change', async () => {
-
-    await loader.ifcManager.setWasmPath('wasm/');
-
     const file = input.files[0];
     const url = URL.createObjectURL(file);
     const model = await loader.loadAsync(url);
@@ -83,100 +82,109 @@ input.addEventListener('change', async () => {
     ifcModels.push(model);
 })
 
-loader.ifcManager.setupThreeMeshBVH(computeBoundsTree, disposeBoundsTree, acceleratedRaycast);
+setupProgress();
 
-const ifcModels = [];
-
-const raycaster = new Raycaster();
-raycaster.firstHitOnly = true;
-const mouse = new Vector2();
-
-
-
-function cast(event) {
-
-    const bounds = canvas.getBoundingClientRect();
-
-    const x1 = event.clientX - bounds.left;
-    const x2 = bounds.right - bounds.left;
-    mouse.x = (x1 / x2) * 2 - 1;
-
-    const y1 = event.clientY - bounds.top;
-    const y2 = bounds.bottom - bounds.top;
-    mouse.x = (x1 / x2) * 2 - 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    return raycaster.intersectObjects(ifcModels)[0];
+function setupProgress() {
+    const text = document.getElementById('progress-text');
+    loader.ifcManager.setOnProgress((event) => {
+        const percent = event.loaded / event.total * 100;
+        const formatted = Math.trunc(percent);
+        text.innerText = formatted;
+    })
 }
 
+// const ifcModels = [];
 
-const hightlightMaterial = new MeshLambertMaterial( {
-    transparent : true,
-    opacity : 0.6,
-    color: 0xff88ff,
-    depthTest: false
-})
-
-const selectionMaterial = new MeshLambertMaterial( {
-    transparent : true,
-    opacity : 0.9,
-    color: 0xff22ff,
-    depthTest: false
-})
-
-let lastModel;
+// const raycaster = new Raycaster();
+// raycaster.firstHitOnly = true;
+// const mouse = new Vector2();
 
 
 
-async function pick(event, material, message, getProps)  {
-    const found = cast(event);
+// function cast(event) {
 
-    if(found) {
-        const index = found.faceIndex;
-        lastModel = found.object;
-        const geometry = found.object.geometry;
-        const id = loader.ifcManager.getExpressId(geometry, index);
+//     const bounds = canvas.getBoundingClientRect();
 
-        //web-ifc properties example
-        if(getProps) {
-        //     const props = await loader.ifcManager.getItemProperties(found.object.modelID, id);
-        //     console.log(props);
-        //     const psets = await loader.ifcManager.getPropertySets(found.object.modelID, id);
+//     const x1 = event.clientX - bounds.left;
+//     const x2 = bounds.right - bounds.left;
+//     mouse.x = (x1 / x2) * 2 - 1;
+
+//     const y1 = event.clientY - bounds.top;
+//     const y2 = bounds.bottom - bounds.top;
+//     mouse.x = (x1 / x2) * 2 - 1;
+
+//     raycaster.setFromCamera(mouse, camera);
+
+//     return raycaster.intersectObjects(ifcModels)[0];
+// }
+
+
+// const hightlightMaterial = new MeshLambertMaterial( {
+//     transparent : true,
+//     opacity : 0.6,
+//     color: 0xff88ff,
+//     depthTest: false
+// })
+
+// const selectionMaterial = new MeshLambertMaterial( {
+//     transparent : true,
+//     opacity : 0.9,
+//     color: 0xff22ff,
+//     depthTest: false
+// })
+
+// let lastModel;
+
+
+
+// async function pick(event, material, message, getProps)  {
+//     const found = cast(event);
+
+//     if(found) {
+//         const index = found.faceIndex;
+//         lastModel = found.object;
+//         const geometry = found.object.geometry;
+//         const id = loader.ifcManager.getExpressId(geometry, index);
+
+//         web-ifc properties example
+//         if(getProps) {
+//             const props = await loader.ifcManager.getItemProperties(found.object.modelID, id);
+//             console.log(props);
+//             const psets = await loader.ifcManager.getPropertySets(found.object.modelID, id);
             
 
             
-        //     for(const pset of psets) {
-        //         const realValues = [];
+//             for(const pset of psets) {
+//                 const realValues = [];
 
-        //         for(const prop of pset.HasProperties) {
-        //             const id = prop.value;
-        //             const value = await loader.ifcManager.getItemProperties(found.object.modelID, id);
-        //             realValues.push(value);
-        //         }
+//                 for(const prop of pset.HasProperties) {
+//                     const id = prop.value;
+//                     const value = await loader.ifcManager.getItemProperties(found.object.modelID, id);
+//                     realValues.push(value);
+//                 }
 
-        //         psets.HasProperties = realValues;
-        //     }
-        //     console.log(psets);
-            const buildings = await loader.ifcManager.getAllItemsOfType(found.object.modelID, IFCBUILDING, true);
-            const building = buildings[0];
-            console.log(building);
-        }
+//                 psets.HasProperties = realValues;
+//             }
+//             console.log(psets);
+//             const buildings = await loader.ifcManager.getAllItemsOfType(found.object.modelID, IFCBUILDING, true);
+//             const building = buildings[0];
+//             console.log(building);
+//         }
         
         
 
-        loader.ifcManager.createSubset({
-            modelID : found.object.modelID,
-            ids: [id],
-            material: hightlightMaterial,
-            scene,
-            removePrevious: true
-        });
-    } else if (lastModel) {
-        loader.ifcManager.removeSubset(lastModel.modelID, material);
-        lastModel = undefined;
-    }
-}
+//         loader.ifcManager.createSubset({
+//             modelID : found.object.modelID,
+//             ids: [id],
+//             material: hightlightMaterial,
+//             scene,
+//             removePrevious: true
+//         });
+//     } else if (lastModel) {
+//         loader.ifcManager.removeSubset(lastModel.modelID, material);
+//         lastModel = undefined;
+//     }
+// }
 
-canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse", false);
-canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick", true);
+// canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse", false);
+// canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick", true);

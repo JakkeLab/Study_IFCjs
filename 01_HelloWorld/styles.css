@@ -8,6 +8,17 @@ html, body {
     overflow: hidden;
 }
 
+#text-container {
+    position: absolute;
+    margin-top: 2rem;
+    margin-left: 1rem;
+    display: flex;
+}
+
+#text-container:first-child {
+    margin-right: 5px;
+}
+
 #three-canvas{
     position: fixed;
     top: 0;
