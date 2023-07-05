@@ -90992,123 +90992,38 @@ renderer.setSize(size.width, size.height);
 
 // IFC loading
 const loader = new IFCLoader();
-
-// loader.ifcManager.setupThreeMeshBVH(computeBoundsTree, disposeBoundsTree, acceleratedRaycast);
 loader.ifcManager.setWasmPath("wasm/");
-loader.ifcManager.useWebWorkers(true, './IFCWorker.js');
+
+let model;
 
 const input = document.getElementById('file-input');
 input.addEventListener('change', async () => {
     const file = input.files[0];
     const url = URL.createObjectURL(file);
-    const model = await loader.loadAsync(url);
+    model = await loader.loadAsync(url);
     scene.add(model);
-    ifcModels.push(model);
+    await editFloorName();
 });
 
-setupProgress();
+async function editFloorName() {
+    const storeysIds = await loader.ifcManager.getAllItemsOfType(model.modelID, IFCBUILDINGSTOREY, false);
+    const firstStoreyId = storeysIds[0];
+    const storey = await loader.ifcManager.getItemProperties(model.modelID, firstStoreyId);
+    console.log(storey);
 
-function setupProgress() {
-    const text = document.getElementById('progress-text');
-    loader.ifcManager.setOnProgress((event) => {
-        const percent = event.loaded / event.total * 100;
-        const formatted = Math.trunc(percent);
-        text.innerText = formatted;
-    });
+    const result = prompt("Introduce the new name for the storey.");
+    storey.LongName.value = result;
+    loader.ifcManager.ifcAPI.WriteLine(model.modelID, storey);
+
+    const data = await loader.ifcManager.ifcAPI.ExportFileAsIFC(model.modelID);
+    const blob = new Blob([data]);
+    const file = new File([blob], "modified.ifc");
+
+    const link = document.createElement('a');
+    link.download = 'modified.ifc';
+    link.href = URL.createObjectURL(file);
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
 }
-
-// const ifcModels = [];
-
-// const raycaster = new Raycaster();
-// raycaster.firstHitOnly = true;
-// const mouse = new Vector2();
-
-
-
-// function cast(event) {
-
-//     const bounds = canvas.getBoundingClientRect();
-
-//     const x1 = event.clientX - bounds.left;
-//     const x2 = bounds.right - bounds.left;
-//     mouse.x = (x1 / x2) * 2 - 1;
-
-//     const y1 = event.clientY - bounds.top;
-//     const y2 = bounds.bottom - bounds.top;
-//     mouse.x = (x1 / x2) * 2 - 1;
-
-//     raycaster.setFromCamera(mouse, camera);
-
-//     return raycaster.intersectObjects(ifcModels)[0];
-// }
-
-
-// const hightlightMaterial = new MeshLambertMaterial( {
-//     transparent : true,
-//     opacity : 0.6,
-//     color: 0xff88ff,
-//     depthTest: false
-// })
-
-// const selectionMaterial = new MeshLambertMaterial( {
-//     transparent : true,
-//     opacity : 0.9,
-//     color: 0xff22ff,
-//     depthTest: false
-// })
-
-// let lastModel;
-
-
-
-// async function pick(event, material, message, getProps)  {
-//     const found = cast(event);
-
-//     if(found) {
-//         const index = found.faceIndex;
-//         lastModel = found.object;
-//         const geometry = found.object.geometry;
-//         const id = loader.ifcManager.getExpressId(geometry, index);
-
-//         web-ifc properties example
-//         if(getProps) {
-//             const props = await loader.ifcManager.getItemProperties(found.object.modelID, id);
-//             console.log(props);
-//             const psets = await loader.ifcManager.getPropertySets(found.object.modelID, id);
-            
-
-            
-//             for(const pset of psets) {
-//                 const realValues = [];
-
-//                 for(const prop of pset.HasProperties) {
-//                     const id = prop.value;
-//                     const value = await loader.ifcManager.getItemProperties(found.object.modelID, id);
-//                     realValues.push(value);
-//                 }
-
-//                 psets.HasProperties = realValues;
-//             }
-//             console.log(psets);
-//             const buildings = await loader.ifcManager.getAllItemsOfType(found.object.modelID, IFCBUILDING, true);
-//             const building = buildings[0];
-//             console.log(building);
-//         }
-        
-        
-
-//         loader.ifcManager.createSubset({
-//             modelID : found.object.modelID,
-//             ids: [id],
-//             material: hightlightMaterial,
-//             scene,
-//             removePrevious: true
-//         });
-//     } else if (lastModel) {
-//         loader.ifcManager.removeSubset(lastModel.modelID, material);
-//         lastModel = undefined;
-//     }
-// }
-
-// canvas.onmousemove = (event) => pick(event, hightlightMaterial, "OnMouse", false);
-// canvas.ondblclick = (event) => pick(event, selectionMaterial, "DoubleClick", true);
